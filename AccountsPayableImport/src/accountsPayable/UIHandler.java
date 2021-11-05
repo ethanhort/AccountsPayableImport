@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
@@ -40,12 +41,12 @@ public class UIHandler {
 	private boolean isFinished = false; 
 
 	/**
-	 * Basic constructor initializes initial frame in fullscreen mode as requested by client. 
+	 * Basic constructor initializes frame in fullscreen mode as requested by client. 
 	 */
 	public UIHandler() {
 
 		//Create Window that Program will be displayed in
-		frame = new JFrame("Benefit Invoice"); 
+		frame = new JFrame("Accounts Payable Import"); 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
@@ -53,9 +54,13 @@ public class UIHandler {
 		JPanel panel = new JPanel(); 
 		frame.add(panel); 
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		
+		JLabel label = new JLabel("INPUT SHOULD NOT CONTAIN COMMAS"); 
+		label.setFont(new Font("Serif", Font.PLAIN, 18));
 
 		//create UI elements and add them to top-level panel
-		panel.add(fileBrowser()); 
+		//panel.add(fileBrowser()); //this needs to go lower
+		panel.add(label); 
 		panel.add(createTextFields()); 
 		panel.add(submitPanel()); 
 
@@ -253,8 +258,12 @@ public class UIHandler {
 
 		//Panel that contains all text submission components
 		JPanel textPanel = new JPanel(); 
-		textPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "INPUT SHOULD NOT CONTAIN COMMAS"));
+		textPanel.setBorder(BorderFactory.createEtchedBorder());
 		textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.PAGE_AXIS));
+		
+		//Panel that contains new text components
+		JPanel newTextPanel = new JPanel(); 
+		newTextPanel.setBorder(BorderFactory.createEtchedBorder());
 
 		//create panels for inputting text
 		JPanel IDPanel = new JPanel(); 
