@@ -44,13 +44,15 @@ public class UIHandler {
 	private static final int NUM_USER_INPUTS = 9; 
 
 	private JFrame frame; 
-	private String reportFilePath, distCodeFilePath; 
+	private String reportFilePath, distCodeFilePath, allocFilePath;
 	private JTextField[] textFields = new JTextField[NUM_USER_INPUTS]; 
 	private String[] userInputs = new String[NUM_USER_INPUTS]; 
 	private JTextField[] form1099TextFields = new JTextField[2]; 
 	private String[] form1099Inputs = new String[2]; 
 	private boolean isFinished = false; 
 	private boolean form1099 = false; 
+	private boolean allocEqual = false; 
+	private String invoiceAmtString; 
 
 	/**
 	 * Basic constructor initializes frame in fullscreen mode as requested by client. 
@@ -411,6 +413,150 @@ public class UIHandler {
 		return textPanel; 
 	}
 
+	public void allocationFrame() {
+
+		frame = new JFrame("Allocation Configuration"); 
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+		JPanel panel = new JPanel(); 
+		frame.add(panel); 
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Do you want to allocate the total amount equally?"));
+
+		JPanel radioPanel = new JPanel();
+		radioPanel.setLayout(new GridLayout());
+		panel.add(radioPanel);
+
+		JPanel browserPanel = new JPanel(); 
+		browserPanel.setLayout(new GridLayout());
+		browserPanel.setBorder(BorderFactory.createEtchedBorder()); 
+		panel.add(browserPanel); 
+
+		JPanel distCodePanel = new JPanel();
+		distCodePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Distribution Codes"));
+		JFileChooser dist = new JFileChooser();
+		JButton distButton = new JButton("Browse"); 
+		JLabel distLabel = new JLabel(""); 
+		distCodePanel.add(distLabel);
+		distCodePanel.add(distButton);
+		
+		JPanel amtPanel = new JPanel(); 
+		amtPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Invoice Amount"));
+		JTextField amt = new JTextField(); 
+		amt.setColumns(10);
+		amtPanel.add(amt);
+		
+		JPanel allocationBrowserPanel = new JPanel(); 
+		allocationBrowserPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Pre-Allocated File"));
+		JFileChooser alloc = new JFileChooser(); 
+		JButton allocButton = new JButton("Browse"); 
+		JLabel allocLabel = new JLabel(""); 
+		allocationBrowserPanel.add(allocLabel);
+		allocationBrowserPanel.add(allocButton); 
+
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(".xlsx", "xlsx");
+		dist.setFileFilter(filter);
+		alloc.setFileFilter(filter);
+
+		JRadioButton r1 = new JRadioButton("Yes");
+		JRadioButton r2 = new JRadioButton("No"); 
+		ButtonGroup bg = new ButtonGroup(); 
+		bg.add(r1);
+		bg.add(r2);
+
+		radioPanel.add(r1); 
+		radioPanel.add(r2); 
+
+		r1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				browserPanel.add(distCodePanel);
+				browserPanel.remove(allocationBrowserPanel);
+				browserPanel.add(amtPanel); 
+				browserPanel.validate();
+				allocEqual = true; 
+			}
+		});
+
+		r2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				browserPanel.add(distCodePanel);
+				browserPanel.remove(amtPanel);
+				browserPanel.add(allocationBrowserPanel);
+				browserPanel.validate();
+				allocEqual = false; 
+			}
+		});
+
+		distButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				//chosen = APPROVE_OPTION only if a file is chosen in the browser
+				int chosen = dist.showOpenDialog(null);
+
+				//get path of chosen file and display in UI
+				if (chosen == JFileChooser.APPROVE_OPTION) {
+					distCodeFilePath = dist.getSelectedFile().getAbsolutePath();
+					distLabel.setText(distCodeFilePath); 
+				}
+			}
+		});
+		
+		allocButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				//chosen = APPROVE_OPTION only if a file is chosen in the browser
+				int chosen = alloc.showOpenDialog(null);
+
+				//get path of chosen file and display in UI
+				if (chosen == JFileChooser.APPROVE_OPTION) {
+					allocFilePath = alloc.getSelectedFile().getAbsolutePath();
+					allocLabel.setText(distCodeFilePath); 
+				}
+			}
+		});
+		
+		JPanel submitPanel = new JPanel(); 
+		panel.add(submitPanel);
+		JButton submit = new JButton("Submit"); 
+		JLabel submitLabel = new JLabel(""); 
+		submitPanel.add(submitLabel); 
+		submitPanel.add(submit); 
+		
+		submit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				boolean finished = false; 
+				if (distCodeFilePath != null) {
+					if (allocEqual) {
+						String amtString = amt.getText().trim();
+						if (isNumeric(amtString) && amtString.substring(amtString.indexOf(".")).length() == 3) {
+							finished = true; 
+							invoiceAmtString = amtString; 
+						} else {
+							submitLabel.setText("Please ensure invoice amount is numeric and contains two decimal digits (i.e. of the form \\\"x.xx\\\")");
+						}
+					} else {
+						if(allocFilePath != null) {
+							finished = true; 
+						} else {
+							submitLabel.setText("Please select a pre-allocated file.");
+						}
+					}
+				} else {
+					submitLabel.setText("Please ensure you have selected a distribution code file.");
+				}
+				
+				if (finished) {
+					isFinished = true; 
+					frame.dispose();
+				}
+				
+			}
+		});
+
+		frame.setVisible(true);
+	}
+
 	/**
 	 * create panel containing submit button that pulls data from text fields when user is finished entering them
 	 * @return panel containing submit button
@@ -428,7 +574,7 @@ public class UIHandler {
 
 				//get inputs from text field
 				parseUserInputs(); 
-				
+
 				boolean finished = true; 
 
 				//ensure that all text fields contain a value and that none contain commas
@@ -442,9 +588,9 @@ public class UIHandler {
 						finished = false; 
 					}
 				}
-				
+
 				if (form1099) {
-					
+
 					for(int i = 0; i < form1099TextFields.length; i++) {
 						if(form1099Inputs[i].length() == 0) {
 							submitLabel.setText("Form 1099 has been selected. Please ensure those fields contain values.");
@@ -456,12 +602,12 @@ public class UIHandler {
 						}
 					}
 				}
-				
+
 				if (finished) {
 					frame.dispose();
-					isFinished = true; 
+					allocationFrame(); 
 				}
-				
+
 			}
 		});
 
@@ -493,13 +639,17 @@ public class UIHandler {
 	public String[] getUserInputs() {
 		return userInputs; 
 	}
-	
+
 	public String[] get1099Inputs() {
 		return form1099Inputs; 
 	}
-	
+
 	public boolean is1099() {
 		return form1099;
+	}
+	
+	public boolean isAllocEqual() {
+		return allocEqual; 
 	}
 
 	/**
@@ -512,6 +662,14 @@ public class UIHandler {
 
 	public String getDistCodeFilePath() {
 		return distCodeFilePath; 
+	}
+	
+	public String getAllocFilePath() {
+		return allocFilePath;
+	}
+	
+	public String getInvoiceAmt() {
+		return invoiceAmtString; 
 	}
 
 	/**
