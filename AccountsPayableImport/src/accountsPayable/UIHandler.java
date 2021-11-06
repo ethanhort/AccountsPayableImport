@@ -2,8 +2,10 @@ package accountsPayable;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JTextField;
 import javax.swing.JButton;
@@ -12,7 +14,7 @@ import javax.swing.JLabel;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
@@ -32,13 +34,23 @@ public class UIHandler {
 	private static final int DOC_DATE_TEXT = 4;
 	private static final int DOC_DESCRIPTION_TEXT = 5;
 	private static final int EFFECTIVE_DATE_TEXT = 6;
-	private static final int NUM_USER_INPUTS = 7; 
+	private static final int DUE_DATE_TEXT = 7;
+	//	private static final int INVOICE_NUM_TEXT = 8;
+	//	private static final int INVOICE_DATE_TEXT = 9; 
+	//	private static final int INVOICE_AMT_TEXT = 9; 
+	//	private static final int INVOICE_DESCRIPTION_TEXT = 10; 
+	private static final int VENDOR_ID_TEXT = 8; 
+
+	private static final int NUM_USER_INPUTS = 9; 
 
 	private JFrame frame; 
 	private String reportFilePath, distCodeFilePath; 
 	private JTextField[] textFields = new JTextField[NUM_USER_INPUTS]; 
 	private String[] userInputs = new String[NUM_USER_INPUTS]; 
+	private JTextField[] form1099TextFields = new JTextField[2]; 
+	private String[] form1099Inputs = new String[2]; 
 	private boolean isFinished = false; 
+	private boolean form1099 = false; 
 
 	/**
 	 * Basic constructor initializes frame in fullscreen mode as requested by client. 
@@ -54,14 +66,15 @@ public class UIHandler {
 		JPanel panel = new JPanel(); 
 		frame.add(panel); 
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		
-		JLabel label = new JLabel("INPUT SHOULD NOT CONTAIN COMMAS"); 
-		label.setFont(new Font("Serif", Font.PLAIN, 18));
+
+		JPanel textPanel = new JPanel(); 
+		textPanel.setLayout(new GridLayout());
 
 		//create UI elements and add them to top-level panel
 		//panel.add(fileBrowser()); //this needs to go lower
-		panel.add(label); 
-		panel.add(createTextFields()); 
+		textPanel.add(createTextFields());
+		textPanel.add(fileBrowser1099()); 
+		panel.add(textPanel); 
 		panel.add(submitPanel()); 
 
 		frame.setVisible(true);
@@ -95,10 +108,10 @@ public class UIHandler {
 		JPanel fileBrowserPanel = new JPanel();
 		fileBrowserPanel.setBorder(BorderFactory.createEtchedBorder());
 		fileBrowserPanel.setLayout(new BoxLayout(fileBrowserPanel, BoxLayout.X_AXIS));
-		
+
 		JPanel GLIBrowserPanel = new JPanel(); 
 		GLIBrowserPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Please Select ADP Invoice GLI File"));
-		
+
 		JPanel distCodeBrowserPanel = new JPanel(); 
 		distCodeBrowserPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Please Select Distribution Codes"));
 
@@ -146,10 +159,10 @@ public class UIHandler {
 				}
 			}
 		});
-		
+
 		GLIBrowserPanel.add(reportButton); 
 		GLIBrowserPanel.add(reportLabel);
-		
+
 		distCodeBrowserPanel.add(distCodeButton);
 		distCodeBrowserPanel.add(distCodeLabel); 
 
@@ -158,9 +171,70 @@ public class UIHandler {
 		fileBrowserPanel.add(distCodeBrowserPanel); 
 		return fileBrowserPanel; 
 	}
-	
+
+	/**
+	 * creates new panel that contains conditional logic that determines necessary components for file browser(s) and 1099 info
+	 * @return JPanel containing appropriate UI elements
+	 */
+	public JPanel fileBrowser1099() {
+		JPanel panel = new JPanel(); 
+		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+		panel.setBorder(BorderFactory.createEtchedBorder());
+
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Issue Form 1099?"));
+		panel.add(buttonPanel); 
+
+		JRadioButton r1 = new JRadioButton("Yes");
+		JRadioButton r2 = new JRadioButton("No"); 
+		ButtonGroup bg = new ButtonGroup(); 
+		bg.add(r1);
+		bg.add(r2);
+
+		JPanel textPanel = new JPanel();
+		textPanel.setLayout(new GridLayout());
+		textPanel.setBorder(BorderFactory.createEtchedBorder()); 
+
+		JPanel typePanel = new JPanel(); 
+		typePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "1099 Type?"));
+		textPanel.add(typePanel); 
+		JTextField typeText = new JTextField();
+		form1099TextFields[0] = typeText; 
+		typeText.setColumns(10);
+		typePanel.add(typeText);
+
+		JPanel boxPanel = new JPanel(); 
+		boxPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "1099 Box?"));
+		textPanel.add(boxPanel); 
+		JTextField boxText = new JTextField(); 
+		form1099TextFields[1] = boxText; 
+		boxText.setColumns(10);
+		boxPanel.add(boxText); 
+
+		buttonPanel.add(r1); 
+		buttonPanel.add(r2); 
+
+		r1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				panel.add(textPanel);
+				panel.validate();
+				form1099 = true; 
+			}
+		});
+
+		r2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				panel.remove(textPanel);
+				panel.validate();
+				form1099 = false; 
+			}
+		});
+
+		return panel; 
+	}
+
 	public void popUp(String msg) {
-		
+
 		JFrame errorFrame = new JFrame("Rounding Exceeded Tolerance"); 
 		errorFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		JPanel panel = new JPanel(); 
@@ -197,7 +271,7 @@ public class UIHandler {
 
 			}
 		}
-		
+
 	}
 
 	/**
@@ -256,14 +330,10 @@ public class UIHandler {
 	 */
 	public JPanel createTextFields() {
 
-		//Panel that contains all text submission components
+		//Panel that contains old text submission components
 		JPanel textPanel = new JPanel(); 
-		textPanel.setBorder(BorderFactory.createEtchedBorder());
+		textPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "INPUT SHOULD NOT CONTAIN COMMAS")); 
 		textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.PAGE_AXIS));
-		
-		//Panel that contains new text components
-		JPanel newTextPanel = new JPanel(); 
-		newTextPanel.setBorder(BorderFactory.createEtchedBorder());
 
 		//create panels for inputting text
 		JPanel IDPanel = new JPanel(); 
@@ -322,6 +392,22 @@ public class UIHandler {
 		textFields[EFFECTIVE_DATE_TEXT] = effectiveDateText;  
 		effectiveDatePanel.add(effectiveDateText);
 
+		JPanel dueDatePanel = new JPanel(); 
+		dueDatePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Due Date"));
+		textPanel.add(dueDatePanel);
+		JTextField dueDateText = new JTextField("");
+		dueDateText.setColumns(10);
+		textFields[DUE_DATE_TEXT] = dueDateText;  
+		dueDatePanel.add(dueDateText);
+
+		JPanel vendorIdPanel = new JPanel(); 
+		vendorIdPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Vendor ID"));
+		textPanel.add(vendorIdPanel);
+		JTextField vendorIdText = new JTextField("");
+		vendorIdText.setColumns(10);
+		textFields[VENDOR_ID_TEXT] = vendorIdText;  
+		vendorIdPanel.add(vendorIdText);
+
 		return textPanel; 
 	}
 
@@ -340,37 +426,42 @@ public class UIHandler {
 		submitButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
-				//ensure user has entered a valid filepath
-				if(reportFilePath != null && distCodeFilePath != null) {
+				//get inputs from text field
+				parseUserInputs(); 
+				
+				boolean finished = true; 
 
-					//tracks whether user has entered values in all fields
-					boolean finished = true; 
-
-					//get inputs from text field
-					parseUserInputs(); 
-
-					//ensure that all text fields contain a value and that none contain commas
-					for(int i = 0; i < userInputs.length; i++) {
-						if(userInputs[i].length() == 0) {
-							submitLabel.setText("None of these fields may be empty");
-							finished = false; 
+				//ensure that all text fields contain a value and that none contain commas
+				for(int i = 0; i < userInputs.length; i++) {
+					if(userInputs[i].length() == 0) {
+						submitLabel.setText("None of these fields may be empty");
+						finished = false;
+					}
+					else if(userInputs[i].contains(",")) {
+						submitLabel.setText("Please remove all commas from these fields");
+						finished = false; 
+					}
+				}
+				
+				if (form1099) {
+					
+					for(int i = 0; i < form1099TextFields.length; i++) {
+						if(form1099Inputs[i].length() == 0) {
+							submitLabel.setText("Form 1099 has been selected. Please ensure those fields contain values.");
+							finished = false;
 						}
-						else if(userInputs[i].contains(",")) {
-							submitLabel.setText("Please remove all commas from these fields");
+						else if(form1099Inputs[i].contains(",")) {
+							submitLabel.setText("Please remove commas from 1099 information.");
 							finished = false; 
 						}
 					}
-
-					if(finished) {
-
-						//close window if user successfully submits form
-						frame.dispose();
-						isFinished = true; 
-					}
 				}
-				else {
-					submitLabel.setText("Please ensure both a GLI and Distribution Code file have been selected.");
+				
+				if (finished) {
+					frame.dispose();
+					isFinished = true; 
 				}
+				
 			}
 		});
 
@@ -388,6 +479,11 @@ public class UIHandler {
 		for (int i = 0; i < textFields.length; i++) {
 			userInputs[i] = textFields[i].getText().trim(); 
 		}
+
+		if (form1099) {
+			form1099Inputs[0] = form1099TextFields[0].getText().trim(); 
+			form1099Inputs[1] = form1099TextFields[1].getText().trim();
+		}
 	}
 
 	/**
@@ -397,6 +493,14 @@ public class UIHandler {
 	public String[] getUserInputs() {
 		return userInputs; 
 	}
+	
+	public String[] get1099Inputs() {
+		return form1099Inputs; 
+	}
+	
+	public boolean is1099() {
+		return form1099;
+	}
 
 	/**
 	 * getter for file path of NLS report
@@ -405,7 +509,7 @@ public class UIHandler {
 	public String getGLIFilePath() {
 		return reportFilePath; 
 	}
-	
+
 	public String getDistCodeFilePath() {
 		return distCodeFilePath; 
 	}
