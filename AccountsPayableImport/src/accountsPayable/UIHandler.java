@@ -50,9 +50,9 @@ public class UIHandler {
 	private JTextField[] form1099TextFields = new JTextField[2]; 
 	private String[] form1099Inputs = new String[2]; 
 	private boolean isFinished = false; 
-	private boolean form1099 = false; 
+	private Boolean form1099 = null; 
 	private boolean allocEqual = false; 
-	private String invoiceAmtString; 
+	private String invoiceAmtString, invoiceAmtGl; 
 
 	/**
 	 * Basic constructor initializes frame in fullscreen mode as requested by client. 
@@ -219,7 +219,7 @@ public class UIHandler {
 		r1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				panel.add(textPanel);
-				panel.validate();
+				panel.updateUI();
 				form1099 = true; 
 			}
 		});
@@ -227,7 +227,7 @@ public class UIHandler {
 		r2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				panel.remove(textPanel);
-				panel.validate();
+				panel.updateUI();
 				form1099 = false; 
 			}
 		});
@@ -440,13 +440,23 @@ public class UIHandler {
 		JLabel distLabel = new JLabel(""); 
 		distCodePanel.add(distLabel);
 		distCodePanel.add(distButton);
-		
+
 		JPanel amtPanel = new JPanel(); 
+		amtPanel.setLayout(new BoxLayout(amtPanel, BoxLayout.Y_AXIS));
 		amtPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Invoice Amount"));
 		JTextField amt = new JTextField(); 
 		amt.setColumns(10);
-		amtPanel.add(amt);
-		
+		JPanel amt2Panel = new JPanel(); 
+		amtPanel.add(amt2Panel);
+		amt2Panel.add(amt);
+
+		JPanel glPanel = new JPanel(); 
+		glPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "GL Code"));
+		JTextField glField = new JTextField(); 
+		glField.setColumns(10);
+		glPanel.add(glField);
+		amtPanel.add(glPanel);
+
 		JPanel allocationBrowserPanel = new JPanel(); 
 		allocationBrowserPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Pre-Allocated File"));
 		JFileChooser alloc = new JFileChooser(); 
@@ -473,7 +483,7 @@ public class UIHandler {
 				browserPanel.add(distCodePanel);
 				browserPanel.remove(allocationBrowserPanel);
 				browserPanel.add(amtPanel); 
-				browserPanel.validate();
+				browserPanel.updateUI();
 				allocEqual = true; 
 			}
 		});
@@ -483,7 +493,7 @@ public class UIHandler {
 				browserPanel.add(distCodePanel);
 				browserPanel.remove(amtPanel);
 				browserPanel.add(allocationBrowserPanel);
-				browserPanel.validate();
+				browserPanel.updateUI();
 				allocEqual = false; 
 			}
 		});
@@ -501,7 +511,7 @@ public class UIHandler {
 				}
 			}
 		});
-		
+
 		allocButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
@@ -515,25 +525,32 @@ public class UIHandler {
 				}
 			}
 		});
-		
+
 		JPanel submitPanel = new JPanel(); 
 		panel.add(submitPanel);
 		JButton submit = new JButton("Submit"); 
 		JLabel submitLabel = new JLabel(""); 
+		submitLabel.setForeground(Color.RED);
 		submitPanel.add(submitLabel); 
 		submitPanel.add(submit); 
-		
+
 		submit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				boolean finished = false; 
 				if (distCodeFilePath != null) {
 					if (allocEqual) {
 						String amtString = amt.getText().trim();
-						if (isNumeric(amtString) && amtString.substring(amtString.indexOf(".")).length() == 3) {
-							finished = true; 
-							invoiceAmtString = amtString; 
+						String glString = glField.getText().trim();
+						if (isNumeric(amtString) && amtString.indexOf(".") > 0 && amtString.substring(amtString.indexOf(".")).length() == 3) {
+							if (isNumeric(glString) && glString.length() == 4) {
+								finished = true; 
+								invoiceAmtString = amtString; 
+								invoiceAmtGl = glString; 
+							} else {
+								submitLabel.setText("Please ensure GL code is a 4 digit number");
+							}
 						} else {
-							submitLabel.setText("Please ensure invoice amount is numeric and contains two decimal digits (i.e. of the form \\\"x.xx\\\")");
+							submitLabel.setText("Please ensure invoice amount is numeric and contains two decimal digits (i.e. of the form \"x.xx\")");
 						}
 					} else {
 						if(allocFilePath != null) {
@@ -545,12 +562,12 @@ public class UIHandler {
 				} else {
 					submitLabel.setText("Please ensure you have selected a distribution code file.");
 				}
-				
+
 				if (finished) {
 					isFinished = true; 
 					frame.dispose();
 				}
-				
+
 			}
 		});
 
@@ -589,18 +606,23 @@ public class UIHandler {
 					}
 				}
 
-				if (form1099) {
+				if (form1099 != null) {
+					if (form1099) {
 
-					for(int i = 0; i < form1099TextFields.length; i++) {
-						if(form1099Inputs[i].length() == 0) {
-							submitLabel.setText("Form 1099 has been selected. Please ensure those fields contain values.");
-							finished = false;
-						}
-						else if(form1099Inputs[i].contains(",")) {
-							submitLabel.setText("Please remove commas from 1099 information.");
-							finished = false; 
+						for(int i = 0; i < form1099TextFields.length; i++) {
+							if(form1099Inputs[i].length() == 0) {
+								submitLabel.setText("Form 1099 has been selected. Please ensure those fields contain values.");
+								finished = false;
+							}
+							else if(form1099Inputs[i].contains(",")) {
+								submitLabel.setText("Please remove commas from 1099 information.");
+								finished = false; 
+							}
 						}
 					}
+				} else {
+					finished = false; 
+					submitLabel.setText("Please make a 1099 selection.");
 				}
 
 				if (finished) {
@@ -626,7 +648,7 @@ public class UIHandler {
 			userInputs[i] = textFields[i].getText().trim(); 
 		}
 
-		if (form1099) {
+		if (form1099 != null && form1099) {
 			form1099Inputs[0] = form1099TextFields[0].getText().trim(); 
 			form1099Inputs[1] = form1099TextFields[1].getText().trim();
 		}
@@ -647,7 +669,7 @@ public class UIHandler {
 	public boolean is1099() {
 		return form1099;
 	}
-	
+
 	public boolean isAllocEqual() {
 		return allocEqual; 
 	}
@@ -663,13 +685,17 @@ public class UIHandler {
 	public String getDistCodeFilePath() {
 		return distCodeFilePath; 
 	}
-	
+
 	public String getAllocFilePath() {
 		return allocFilePath;
 	}
-	
+
 	public String getInvoiceAmt() {
 		return invoiceAmtString; 
+	}
+
+	public String getGLCode() {
+		return invoiceAmtGl; 
 	}
 
 	/**
