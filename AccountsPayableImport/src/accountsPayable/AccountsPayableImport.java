@@ -13,6 +13,12 @@ public class AccountsPayableImport {
 	private static final int LOAN_INDEX = 4;
 	private static final int FAS_INDEX = 5;
 	private static final int PERCENT_INDEX = 6; 
+	
+	//allocation spreadsheet indices
+	private static final int ALLOC_START_INDEX = 2; 
+	private static final int ALLOC_AMT_INDEX = 0; 
+	private static final int ALLOC_DIST_INDEX = 1;
+	private static final int ALLOC_GL_INDEX = 2; 
 
 
 	private static String[] userInputs, form1099Inputs;
@@ -59,7 +65,11 @@ public class AccountsPayableImport {
 		populateDataFromUI(ui); 
 
 		DistCodeReport distCodes = new DistCodeReport(distCodeFilePath, DIST_START_INDEX, CODE_INDEX, PROGRAM_INDEX, GRANT_INDEX, LOAN_INDEX, FAS_INDEX, PERCENT_INDEX);
-
+		
+		if (!allocEqual) {
+			AllocationReport alloc = new AllocationReport(allocFilePath, ALLOC_START_INDEX, ALLOC_AMT_INDEX, ALLOC_DIST_INDEX, ALLOC_GL_INDEX); 			
+			System.out.println(alloc);
+		}
 		
 		//for testing purposes only
 		

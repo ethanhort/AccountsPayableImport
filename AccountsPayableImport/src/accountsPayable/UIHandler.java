@@ -521,7 +521,7 @@ public class UIHandler {
 				//get path of chosen file and display in UI
 				if (chosen == JFileChooser.APPROVE_OPTION) {
 					allocFilePath = alloc.getSelectedFile().getAbsolutePath();
-					allocLabel.setText(distCodeFilePath); 
+					allocLabel.setText(allocFilePath); 
 				}
 			}
 		});
