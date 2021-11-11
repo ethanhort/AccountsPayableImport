@@ -34,7 +34,7 @@ public class AllocationReport {
 					amount = new BigDecimal(sheet.getRow(i).getCell(amtIndex).getNumericCellValue());
 					amount = amount.setScale(2, RoundingMode.HALF_UP);
 					if (sheet.getRow(i).getCell(distIndex).getCellType() == CellType.STRING)  {
-						distCode = sheet.getRow(i).getCell(distIndex).getStringCellValue(); 						
+						distCode = sheet.getRow(i).getCell(distIndex).getStringCellValue().toUpperCase(); 						
 					} else {
 						distCode = String.valueOf(sheet.getRow(i).getCell(distIndex).getNumericCellValue());
 						distCode = distCode.substring(0, distCode.indexOf(".")); 
