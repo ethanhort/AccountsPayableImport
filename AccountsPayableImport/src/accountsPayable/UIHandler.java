@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Utility class to build and operate UI elements abstracted from main computation
+ * don't read this. it's pointless
  * @author Ethan Horton
  *
  */
