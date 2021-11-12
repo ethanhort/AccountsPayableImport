@@ -1,0 +1,21 @@
+dist codes file starts on line 3, ends at end of file 
+	-rows with no value in program column will not be used (make sure every line of data has something in that col and that no "filler data" is 
+		included in that col
+	-distribution code is in col 1
+	-program is in col 3
+	-grant is in col 4
+	-loan num is in col 5
+	-fas is in col 6
+	-percent is in col 7
+	
+when allocating equally, make sure that invoice amount is over ~$100. I think as long as it's more than (number of unique dist codes) * $1 it will be fine,
+but if you start getting negative debits, this is probably why. 
+
+pre allocated file starts on line 3, ends at end of file
+	-only rows with non-zero numeric values in the first column are used
+		-do not put a numeric value in the first column, if you do not want the row to be used
+	-dollar amounts must be in col A of the excel file
+	-distribution codes must be in col B of the excel file
+	-gl numbers must be in col c of the excel file
+		-gl numbers should be number values in excel -- not string 
+			-can change this if you want
